@@ -8,11 +8,16 @@ windows
 
 ## 启动方式
 
-直接编译源代码
+直接使用
 
 ```
-拉取后到项目文件夹下
-g++ Snake.cpp -o Snake
+./snake
+```
+
+或者编译源码
+
+```
+g++ src/main.cpp src/board.cpp src/snake.cpp src/renderer.cpp -I src -o Snake
 ./Snake
 ```
 
