@@ -1,6 +1,8 @@
-#include "snake.h"
-#include "board.h"
-#include "renderer.h"
+#include "entities/snake.h"
+#include "entities/board.h"
+#include "entities/food.h"
+#include "renderer/renderer.h"
+#include "game/game_mediator.h"
 
 #include <iostream>
 #include <conio.h>
@@ -10,9 +12,9 @@
 int main() {
     std::cout << "\033[?25l"; //隐藏光标
 
-    bd::board board;
+    sn::board board;
     sn::snake snake;
-    bd::food food(snake, board);
+    sn::food food(snake, board);
 
     re::draw(snake, board, food);
 
@@ -38,7 +40,7 @@ int main() {
             std::cout << "Game Over!\n" << snake.get_grade() ;
             std::cout << "\033[?25h" ;
             exit(1);            
-        } else if(snake.eat(food)) {
+        } else if(gm::eat_food(snake, food)) {
             food.spawn(snake, board);
         }
 

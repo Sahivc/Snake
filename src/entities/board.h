@@ -1,12 +1,8 @@
 #pragma once
 
-#include "position.h"
+#include "common/position.h"
 
 namespace sn{
-    class snake;
-}
-
-namespace bd{
 
     class board {
         private:
@@ -19,18 +15,6 @@ namespace bd{
             bool isinside(Pos point) const;
             int get_length() const;
             int get_width() const;
-        };
-        
-        class food {
-            private:
-                Pos food_p;   
-            public:
-                food(sn::snake& snake, bd::board& board) {
-                    spawn(snake, board);
-                }
-                ~food() = default;
-                void spawn(const sn::snake& snake, const bd::board& board);
-                Pos get_food() const;
         };
 
 }

@@ -1,6 +1,6 @@
 
 #include "snake.h"
-#include "board.h"
+
 
 void sn::snake::push_head(Pos point) {
     if(size == 1200){}
@@ -59,9 +59,9 @@ void sn::snake::move() {
     pop_tail();
 }
 
-bool sn::snake::eat(bd::food& food) {
+bool sn::snake::eat(Pos position) {
     Pos point = next();
-    if(point == food.get_food()) {
+    if(point == position) {
         push_head(point);
         grade += 1000;
 

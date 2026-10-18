@@ -1,10 +1,11 @@
 #include "renderer.h"
-#include "snake.h"
-#include "board.h"
+#include "entities/snake.h"
+#include "entities/board.h"
+#include "entities/food.h"
 
 #include <iostream>
 
-void re::draw(const sn::snake& snake, const bd::board& board, const bd::food& food) {
+void re::draw(const sn::snake& snake, const sn::board& board, const sn::food& food) {
     Pos point;
 
     for(int y = 0; y < board.get_length() + 1; ++y) {

@@ -1,10 +1,6 @@
 #pragma once
 
-#include "position.h"
-
-namespace bd{
-    class food;
-}
+#include "common/position.h"
 
 namespace sn{
 
@@ -33,9 +29,10 @@ namespace sn{
             void change_direction(char new_direction);
             Pos next() const;
             void move();
-            bool eat(bd::food& food);
+            bool eat(Pos position);
             Pos get_headval() const;
             int get_grade() const;
     };
 
 }
+
