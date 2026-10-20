@@ -1,7 +1,6 @@
 
 #include "snake.h"
 
-
 void sn::snake::push_head(Pos point) {
     if(size == 1200){}
 
@@ -29,26 +28,26 @@ bool sn::snake::iscontains(Pos point) const{
 }
 
 void sn::snake::change_direction(char new_direction) {
-    if(direction == 'd' && new_direction != 'a')
+    if(direction == 'D' && new_direction != 'A')
         direction = new_direction;
-    else if(direction == 'a' && new_direction != 'd')
+    else if(direction == 'A' && new_direction != 'D')
         direction = new_direction;
-    else if(direction == 'w' && new_direction != 's')
+    else if(direction == 'W' && new_direction != 'S')
         direction = new_direction;
-    else if(direction == 's' && new_direction != 'w')
+    else if(direction == 'S' && new_direction != 'W')
         direction = new_direction;
 }
 
 Pos sn::snake::next() const{
     Pos point = get_headval(); //head 记录的是头部元素的后一位
 
-    if(direction == 'd')
+    if(direction == 'D')
         point.x++;
-    if(direction == 'a')
+    if(direction == 'A')
         point.x--;
-    if(direction == 'w')
+    if(direction == 'W')
         point.y--;
-    if(direction == 's')
+    if(direction == 'S')
         point.y++;
 
     return point;
@@ -78,4 +77,23 @@ Pos sn::snake::get_headval() const{
 int sn::snake::get_grade() const{
     return grade;
 }
+
+const Pos* sn::snake::get_body() const{
+    const Pos* snake_body = body; 
+    return snake_body;
+}
+
+int sn::snake::get_head() const{
+    return head;
+}
+
+int sn::snake::get_tail() const{
+    return rear;
+}
+
+void sn::snake::dataopration(std::function<void(Pos point)> func)const {
+    for(int travl = rear; travl < head; travl = (travl + 1) % 1200) {
+        func(body[travl]);
+    }
+} //这里是回调函数(基于高阶函数实现），用 std::functional
 

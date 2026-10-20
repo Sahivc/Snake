@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common/position.h"
+#include <functional> //后面使用回调函数
 
 namespace sn{
 
@@ -10,7 +11,7 @@ namespace sn{
             int rear;
             int size;
             Pos body[1200]; //存在栈内，这个容量怎么根据实际情况动态修改呢？还是说游戏的不可变数据需要不可变对象？
-            char direction = 'r';
+            char direction;
             int grade;
 
         public:
@@ -19,7 +20,7 @@ namespace sn{
                 rear = 0;   
                 size = 1;
                 body[0] = {1, 1};
-                direction = 'd';
+                direction = 'D';
                 grade = 0;
             }
             ~snake() = default;
@@ -32,6 +33,10 @@ namespace sn{
             bool eat(Pos position);
             Pos get_headval() const;
             int get_grade() const;
+            const Pos* get_body() const;
+            int get_head() const;
+            int get_tail() const;
+            void dataopration(std::function<void(Pos point)> func) const;
     };
 
 }

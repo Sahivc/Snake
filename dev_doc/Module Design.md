@@ -1,7 +1,18 @@
 ---
 tags:
 ---
-使用 `namespace snake`
+使用 `namespace sn`
+
+## 模块依赖情况
+
+三个层级的模块
+- 最底层：position
+- 中间层：board, snake, food, renderer
+- 最上层：主循环
+
+第三方模块：SFML
+
+上层依赖下层；food 依赖 board 和 snake ；renderer 和 主循环 依赖 SFML
 
 ## 基础类型：坐标
 
@@ -68,8 +79,8 @@ Pos food_position;
 
 上面的代码依赖第三方库 `random` 。随机数种子和引擎只需要初始化一次，放在命名空间内部。而分布器放在 `spawn` 内部。
 
-`Pos get_food() const`
-获得食物坐标，后面有用
+`void foodoperation(std::function<void(Pos position)> func)` 
+一个回调函数，因为 food 模块依赖 snake 模块，所以不能再让 snake 依赖 food ，于是采用回调函数发送操作的方式交给 food 操作 food_position 数据
 
 ## class snake
 
@@ -111,17 +122,115 @@ Pos food_position;
 `int get_grade() const`
 取得分数，输入无，返回一个分数。渲染有用
 
+新增 `void dataopration(std::function<void(Pos position)> func) const`
+一个回调函数，这个函数不暴露内部数组，只接受外部的操作，并作用在数组元素上。依赖 `functional` 库
+
 ## class renderer
 
-负责渲染
+管理图形和绘图（注意，不管显示）
 
-`void draw(const snake& snake, const board& board)` 
-棋盘用 `.` or ` ` ，蛇用 `#` ，食物用 `*`。遍历棋盘中的每个点，判断这个点在哪个对象的范围内，接着打印。依赖前三个模块
+新的类型，灰度值，由三个整数组成的结构体，这个模块依赖它。
+`struct pray{};`
 
-## namespace gm
+### 重要的问题：给定两个不同尺度的坐标系统，如何构造一个保持棋盘几何结构的映射?
 
-放在 game_mediator 内部，由于 board, snake, food, renderer 之间处于同一层级，并且会互相产生循环依赖，所以需要一个 game 模块来协调这些模块之间的依赖，实现解耦
+逻辑空间：$\mathcal G=\mathbb R^2$，坐标记为：$\mathbf g= \begin{bmatrix}g_x\\g_y\end{bmatrix}$ 。虽然实际蛇的位置通常取整数格点，但使用 $\mathbb R^2$ 建模，便于描述一般的坐标变换。屏幕空间：$\mathcal P=\mathbb R^2$，像素坐标记为：$\mathbf p= \begin{bmatrix}p_x\\p_y\end{bmatrix}$ 。注意，屏幕最终呈现的是离散像素网格，但图形 API 中的坐标通常可以是连续的浮点数。因此，我们先建立连续坐标映射，再讨论像素栅格化。
 
-`bool eat_food(snake& snake, food& food)`
-将食物的坐标传递给 `eat()`。由于 food 模块已经依赖 snake 模块，为了防止循环依赖， snake 的 `eat()` 依赖 food_position ，所以传入的参数改成 `Pos point`
+在像素坐标系中，定义两个基向量：$\mathbf e_x= \begin{bmatrix}1\\0\end{bmatrix}, \quad \mathbf e_y= \begin{bmatrix}0\\1\end{bmatrix}$ ，它们分别表示向右移动 1 像素、向下移动 1 像素。
+
+但在游戏的逻辑坐标系中，我们希望每移动 1 个单位，就在像素坐标系中移动 20 像素。因此，逻辑坐标系的两个单位基向量映射为：
+
+$T(\mathbf e_x)= \begin{bmatrix}20\\0\end{bmatrix}, \qquad T(\mathbf e_y)= \begin{bmatrix}0\\20\end{bmatrix}$
+
+线性变换的矩阵，可以由标准基向量经过变换后的结果作为列向量构造出来。因此，变换矩阵为：
+
+$A= \begin{bmatrix} 20&0\\ 0&20 \end{bmatrix}$ 
+
+利用线性性：
+$\begin{aligned} T(\mathbf g) &=g_xT(\mathbf e_x)+g_yT(\mathbf e_y)\\ &=A\mathbf g\\ &=\begin{bmatrix}20g_x\\20g_y\end{bmatrix} \end{aligned}$
+
+理论上，存在两个坐标系转化的参数是 1的情况，但是在固定窗口大小和蛇速度的情况下，这也就意味着逻辑坐标会变得和窗口一样大，地图变大而速度不变，相同时间意味着相同路程，蛇会显得很慢。但是也可以操作蛇的速度，使得相同时间走的路程变大，以抵消地图变大的代价
+
+### class Rectangle
+
+管理方形的属性和绘制逻辑
+- `unsigned int cell_size`
+- `int color[3]`
+
+```
+void drawcell(sf::RenderWindow& window, Pos position);
+```
+在窗口指定位置画出矩形
+
+## 主循环
+
+主循环负责窗口管理，事件和控制控制
+
+**一般渲染流程**
+1. 初始化所有对象
+2. 处理窗口事件
+3. clear 清空后台帧缓冲
+4. 绘制所有物体
+5. display 交换缓冲区，展示画面
+每一帧之后，因为会交换缓冲区，所以必须清空后台缓存，并重新绘制所有物体。双缓冲？
+
+**主循环流程**
+初始化窗口，初始化帧率，初始化蛇、食物、矩形。窗口是否开着？队列中是否存在事件？如果不存在，那么 pass；否则，处理事件：是否是 Event::close？是则关闭窗口；否则，是否键盘事件？是，则根据按下的键改变方向（改变方向需要把第三方库返回的值与第三方库的坐标比较，如果符合，就映射成一个字符，不要直接在snake内部用第三方库给的坐标，解耦。多种情况映射用 switch case）。否则 pass 。`delta_time` 是否超过指定时间？是则移动加减去指定时间；否则，pass 。头是否超过边界？是否吃到食物？清空后台帧缓冲，绘制食物，绘制蛇，display 交换缓冲区。
+
+### 遇到的问题
+
+我们需要获得蛇的身体，用于遍历。但是我们不能暴露数据，不能让外部修改
+- 拷贝（太低效）
+- const（需要外部const指针）
+- 迭代器（需要获得底层地址）
+- 回调函数（最终选择，见上文）
+
+### std::optional 和 模板
+
+```
+while (const auto event = window.pollEvent())
+{
+	if (event->is<sf::Event::Closed>())
+		window.close();
+}
+```
+
+这一段不会导致死循环吗？
+`windows.pollEvent()` 这个函数检查事件队列是否存在事件，如果存在，返回一个对象 `std::optional<sf::Event>` ，不存在就不会接着循环。检查这个事件的成员变量是否是 `Closed` 类型的变量，如果是就令 `windows.isOpen()` 返回 false 。用 while 是因为，每一帧用户的输入可能很多，需要逐个处理（我不了解这些对象的组成）
+- `event->` 等价于 `event.value()` 
+- `is<sf::Event::T>()`  会检查当前事件类型是否与 `sf::Event::T` 匹配
+- `is<T>()`，返回 `bool` 类型，只判断事件类型是否匹配
+- `getIf<T>()`，返回指针，匹配时获取事件数据的地址，不匹配时返回 `nullptr`
+
+泛型编程，希望编写的代码能适用多种类型，一般一种逻辑可以用在多种类型上的时候考虑。py 和 scheme 这种动态语言天生支持泛型，但是 C++ 这类静态类型语言，需要用模板实现泛型
+
+### 联想
+
+我想到了高阶函数，把函数作为参数传入和返回
+
+高阶函数抽象行为，泛型抽象类型
+
+lambda表达式，匿名函数，临时定义的函数，一般和高阶函数配合使用
+
+```C++
+[capture](parameters) -> return_type {
+    // 函数体
+};
+
+[capture]捕获列表
+指定 Lambda 如何访问定义它的外部作用域中的局部变量。
+```
+
+C++实现高阶函数
+- 模板
+- 函数指针
+- 使用 `std::function`
+
+### 调控蛇的速度
+
+本来速度应该让蛇本身进行的，但是我突然懒得做了，就算了，直接用主循环控制。
+
+蛇的速度和帧率应该解耦，假设我们需要蛇的速度是 5 单位/s，根据 s=vt ，要移动一单位，需要0.2s，也即，每 0.2s 移动一次
+
+计时器在每一次循环前记录上一个循环的时间，如果第一次循环，那么为 0 ，并累加给 delta_time ，重置计时器。如果 delta_time 超过 0.2 ，那么令蛇移动，并且 delta_time 自减 0.2
 

@@ -4,24 +4,24 @@
 
 ## 启动环境
 
-windows
+- C++17 及以上
+- 依赖：SFML3
+
 
 ## 启动方式
 
-直接使用
+编译源码，在项目根目录
 
 ```
-./snake
+make
 ```
 
-或者编译源码
+清理
 
 ```
-g++ src/main.cpp src/board.cpp src/snake.cpp src/renderer.cpp -I src -o Snake
-./Snake
+make clean
 ```
 
-## 注意事项
+## 操作方式
 
-终端拉大一点
-
+按 'A' 'S' 'D' 'W' 移动蛇

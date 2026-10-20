@@ -1,6 +1,7 @@
 #include "food.h"
 #include "snake.h"
 #include "board.h"
+
 #include <random>
 
 std::random_device rd; //种子
@@ -21,7 +22,7 @@ void sn::food::spawn(const sn::snake& snake, const sn::board& board) {
     food_position = point;
 }
 
-Pos sn::food::get_food() const{
-    return food_position;
+void sn::food::foodoperation(std::function<void(Pos position)> func) {
+    func(food_position);
 }
 

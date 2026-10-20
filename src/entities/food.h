@@ -2,6 +2,8 @@
 
 #include "common/position.h"
 
+#include <functional>
+
 namespace sn{
     class snake;
     class board;
@@ -9,7 +11,7 @@ namespace sn{
 
 namespace sn{
 
-        class food {
+    class food {
         private:
             Pos food_position;   
         public:
@@ -18,7 +20,8 @@ namespace sn{
             }
             ~food() = default;
             void spawn(const sn::snake& snake, const sn::board& board);
-            Pos get_food() const;
+            void foodoperation(std::function<void(Pos position)> func);
     };
 
 }
+

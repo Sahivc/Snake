@@ -3,28 +3,20 @@
 #include "entities/board.h"
 #include "entities/food.h"
 
-#include <iostream>
+#include <SFML/Graphics.hpp>
 
-void re::draw(const sn::snake& snake, const sn::board& board, const sn::food& food) {
-    Pos point;
+void re::rectangle::drawrect(sf::RenderWindow& window, Pos position) {
+    sf::RectangleShape rectangle({
+        static_cast<float>(rect_size - 1), 
+        static_cast<float>(rect_size - 1)
+    });
+    rectangle.setFillColor(sf::Color(color.value1, color.value2, color.value3));
 
-    for(int y = 0; y < board.get_length() + 1; ++y) {
-        point.y = y;
+    rectangle.setPosition({
+        static_cast<float>(20 * position.x), //20是转化参数
+        static_cast<float>(20 * position.y)
+    });  //从逻辑坐标到像素坐标
 
-        for(int x = 0; x < board.get_width() + 1; ++x) {
-            point.x = x;
-
-            if(point == food.get_food())
-                std::cout << "*" ;
-            else if(snake.iscontains(point))
-                std::cout << "#" ;
-            else
-                std::cout << "." ;
-        }
-
-        std::cout << "\n" ;
-    }
-
-    std::cout << snake.get_grade() ;
+    window.draw(rectangle);
 }
 
