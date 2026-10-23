@@ -21,6 +21,7 @@ namespace sn{
             ~food() = default;
             void spawn(const sn::snake& snake, const sn::board& board);
             void foodoperation(std::function<void(Pos position)> func);
+            Pos get_food();
     };
 
 }

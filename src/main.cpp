@@ -2,11 +2,13 @@
 #include "entities/board.h"
 #include "entities/food.h"
 #include "renderer/renderer.h"
+#include "pathfinder/pathfinder.h"
 
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Clock.hpp>
 #include <SFML/System/Time.hpp>
+#include <stack>
 
 int main() {
     //初始化窗口
@@ -19,8 +21,10 @@ int main() {
     window.setFramerateLimit(60);
 
     //初始化对象
-    sn::snake snake;
+    sn::snake snake(board);
     sn::food food(snake, board);
+    sn::pathfinder path_machine; //初始化一个寻路器
+    std::stack<Pos> path = path_machine.pathfinding(board, snake, food);  //计算路径
 
     re::rectangle rectangle;
 
@@ -55,7 +59,7 @@ int main() {
         }
 
         if(delta_time > sf::seconds(0.1f)) {
-            snake.move();
+            snake.move(path);
             delta_time -= sf::seconds(0.1f);
         }
 
@@ -64,9 +68,11 @@ int main() {
         } 
         else {
             food.foodoperation(
-                [&snake, &food, &board](Pos position) {
-                    if (snake.eat(position))
+                [&snake, &food, &board, &path, &path_machine](Pos position) {
+                    if (snake.eat(position)) {
                         food.spawn(snake, board);
+                        path = path_machine.pathfinding(board, snake, food);
+                    }
                 }
             );
         }

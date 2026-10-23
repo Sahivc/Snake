@@ -36,6 +36,8 @@ void sn::snake::change_direction(char new_direction) {
         direction = new_direction;
     else if(direction == 'S' && new_direction != 'W')
         direction = new_direction;
+    else if(direction == ' ')
+        direction = new_direction;
 }
 
 Pos sn::snake::next() const{
@@ -53,8 +55,15 @@ Pos sn::snake::next() const{
     return point;
 }
 
-void sn::snake::move() {
-    push_head(next());
+void sn::snake::move(std::stack<Pos>& path) {
+    if(path.empty()){
+        push_head(next());
+    } 
+    else {
+        push_head(path.top());
+        path.pop();
+    }
+
     pop_tail();
 }
 
@@ -97,3 +106,6 @@ void sn::snake::dataopration(std::function<void(Pos point)> func)const {
     }
 } //这里是回调函数(基于高阶函数实现），用 std::functional
 
+char sn::snake::get_derection()const {
+    return direction;
+}

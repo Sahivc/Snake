@@ -6,13 +6,14 @@ tags:
 ## 模块依赖情况
 
 三个层级的模块
-- 最底层：position
-- 中间层：board, snake, food, renderer
+- 最底层：position，randnum
+- 第二层：board
+- 第三层：snake, food, renderer，pathfinder
 - 最上层：主循环
 
 第三方模块：SFML
 
-上层依赖下层；food 依赖 board 和 snake ；renderer 和 主循环 依赖 SFML
+上层依赖下层；food 依赖 board 和 snake ，snake 依赖 board；pathfinder 依赖 board，snake，food；renderer 和 主循环 依赖 SFML
 
 ## 基础类型：坐标
 
@@ -36,6 +37,26 @@ struct Pos {
 
 `bool operator==(const Pos p)const`
 我们需要重载运算符，使得两个坐标相等被定义。
+
+## 随机数生成器
+
+负责生成随机数，依赖第三方库 `random` 。随机数种子和引擎只需要初始化一次，放在命名空间内部。而分布器放在函数内部。位于 namespace sn
+
+`int random_gen(int lower, int upper)` 
+一个随机数生成器，将分布器封装，输入两个整数范围，得到一个范围内的随机整数。food 和 Snake 依赖。
+
+```    
+    std::uniform_int_distribution<int> dist_x(1, WIDTH - 1); //分布器
+    std::uniform_int_distribution<int> dist_y(1, LENGTH - 1);
+
+```
+
+这个不能放在 .h 文件内，多个文件引用会导致冲突，放在 .cpp 文件内
+```
+    //随机数生成
+    std::random_device rd; //种子
+    std::mt19937 gen(rd()); //随机引擎
+```
 
 ## class board
 
@@ -65,20 +86,6 @@ Pos food_position;
 `void spawn(snake& snake, board& board)`
 生成新的食物坐标并改变成员变量 food_point。我们需要先判断生成的坐标是否在蛇的身上，以及不能越界，依赖 snake 和 board 两个模块
 
-```
-    //随机数生成，我在豆包搜到的
-    std::random_device rd; //种子
-    std::mt19937 gen(rd()); //随机引擎
-```
-
-```    
-    std::uniform_int_distribution<int> dist_x(1, WIDTH - 1); //分布器
-    std::uniform_int_distribution<int> dist_y(1, LENGTH - 1);
-
-```
-
-上面的代码依赖第三方库 `random` 。随机数种子和引擎只需要初始化一次，放在命名空间内部。而分布器放在 `spawn` 内部。
-
 `void foodoperation(std::function<void(Pos position)> func)` 
 一个回调函数，因为 food 模块依赖 snake 模块，所以不能再让 snake 依赖 food ，于是采用回调函数发送操作的方式交给 food 操作 food_position 数据
 
@@ -91,7 +98,7 @@ Pos food_position;
 - 一个储存头部下标的变量 `head`，指向头节点的后一位（因为它指向的是下一个可以插入的位置），应该初始化为 1
 - 尾部变量 `tail`，初始化为 0
 - size，初始化为 1
-- 一个数组，初始化 0 位置处的坐标为 (1, 1)
+- 一个数组，利用随机数生成器初始化 0 位置为随机坐标
 - 因为贪吃蛇的移动特性，需要加上一个 direction，初始向右
 - grade
 
@@ -233,4 +240,13 @@ C++实现高阶函数
 蛇的速度和帧率应该解耦，假设我们需要蛇的速度是 5 单位/s，根据 s=vt ，要移动一单位，需要0.2s，也即，每 0.2s 移动一次
 
 计时器在每一次循环前记录上一个循环的时间，如果第一次循环，那么为 0 ，并累加给 delta_time ，重置计时器。如果 delta_time 超过 0.2 ，那么令蛇移动，并且 delta_time 自减 0.2
+
+## 自动寻路器(class pathfinder)
+
+自动寻路确实是蛇的一种行为，但“决定怎么走”和“执行移动”是两种不同的职责。把它们分开，后续实现 BFS、A* 或更安全的寻路策略时，就不必大幅修改蛇的移动逻辑
+
+将棋盘抽象成一张 $|E|=|V|=width \times length$ 的网格图，那么问题就可以抽象成：如何找到一条从一个节点到另一个节点的路径。
+
+`void pathfinding(board& board,snake& snake, food& food)`
+利用 [[BFS]] 算法算出路径。board 是一种特殊的图，不用设计数据结构显示存储，只需要通过计算就可以得到邻接节点，这里计算过程封装成四个 lambda 表达式。临时属性用二维数组存储，每个格子都可以对应一个坐标节点。
 

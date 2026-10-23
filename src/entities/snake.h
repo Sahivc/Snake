@@ -1,7 +1,10 @@
 #pragma once
 
 #include "common/position.h"
+#include "common/randnum.h"
+#include "board.h"
 #include <functional> //后面使用回调函数
+#include <stack>
 
 namespace sn{
 
@@ -15,13 +18,16 @@ namespace sn{
             int grade;
 
         public:
-            snake() {
+            snake(sn::board& board) {
                 head = 1;
                 rear = 0;   
                 size = 1;
-                body[0] = {1, 1};
-                direction = 'D';
+                direction = ' ';
                 grade = 0;
+
+                int x = sn::random_number(1, board.get_width());
+                int y = sn::random_number(1, board.get_length());
+                body[0] = {x, y};
             }
             ~snake() = default;
             void push_head(Pos point);
@@ -29,7 +35,7 @@ namespace sn{
             bool iscontains(Pos point) const;
             void change_direction(char new_direction);
             Pos next() const;
-            void move();
+            void move(std::stack<Pos>& path);
             bool eat(Pos position);
             Pos get_headval() const;
             int get_grade() const;
@@ -37,6 +43,7 @@ namespace sn{
             int get_head() const;
             int get_tail() const;
             void dataopration(std::function<void(Pos point)> func) const;
+            char get_derection()const;
     };
 
 }

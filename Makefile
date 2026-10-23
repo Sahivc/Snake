@@ -7,7 +7,9 @@ SOURCE = src/main.cpp \
 		src/entities/board.cpp \
 		src/entities/snake.cpp \
 		src/entities/food.cpp \
-		src/renderer/renderer.cpp
+		src/renderer/renderer.cpp \
+		src/pathfinder/pathfinder.cpp \
+		src/common/randnum.cpp
 
 HEAD_FILE = src/
 
